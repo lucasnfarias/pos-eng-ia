@@ -76,3 +76,23 @@ https://www.youtube.com/watch?v=ysPbXH0LpIE
 - Many LLMs have been trained with massive amounts of JSON data
 - Avoid repetitions in JSON (e.g. object arrays)
   ![alt text](image-1.png)
+
+
+## Refs
+6 - Módulo - Prompt Engineering na prática
+6.1 - Como escrever prompts que realmente geram boas respostas
+https://youtu.be/ysPbXH0LpIE
+https://platform.openai.com/tokenizer
+https://platform.openai.com/docs/guides/prompt-engineering
+https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-4-best-practices
+https://docs.lovable.dev/prompting/prompting-debugging
+6.2 - Padrão TOON e JSON para prompts
+https://github.com/toon-format/toon?tab=readme-ov-file
+https://mpgone.com/json-prompt-guide/
+https://apidog.com/pt/blog/json-format-prompts-pt/
+https://medium.com/data-science-in-your-pocket/toon-bye-bye-json-for-llms-91e4fe521b14
+https://github.com/toon-format/toon
+https://toontools.vercel.app/playground
+https://www.linkedin.com/posts/webai_toon-json-mcp-activity-7395932385500069888-vgRC?utm_source=share&utm_medium=member_desktop&rcm=ACoAABS1ckYBm0_ZMP8TT2e4opa3bFMxTRxyJ3w
+https://www.linkedin.com/posts/pawel-huryn_how-to-format-data-in-prompts-for-llms-and-activity-7397245245299761152-VGHQ
