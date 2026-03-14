@@ -1,0 +1,39 @@
+{
+  "inputs": [],
+  "servers": {
+    "erickwendel-contributions": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@erickwendel/contributions-mcp"
+      ],
+      "type": "stdio"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--executable-path",
+        "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
+        "--extension",
+        "--browser",
+        "chrome"
+      ],
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "${env:PLAYWRIGHT_MCP_EXTENSION_TOKEN}"
+      }
+    },
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "envFile": "${workspaceFolder}/.env",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp",
+        "--api-key",
+        "${env:CONTEXT7_API_KEY}"
+      ]
+    }
+  }
+}
