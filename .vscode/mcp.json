@@ -34,6 +34,10 @@
         "--api-key",
         "${env:CONTEXT7_API_KEY}"
       ]
+    },
+    "grafana": {
+      "type": "sse",
+      "url": "http://localhost:8000/mcp"
     }
   }
 }

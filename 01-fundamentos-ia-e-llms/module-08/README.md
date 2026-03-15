@@ -75,3 +75,16 @@ https://nextjs.org/
 https://www.better-auth.com/
 8.5 - Usando IA para colher dados de telemetria de apps
 Projeto em exemplo-09-grafana-mcp/
+
+## Troubleshooting
+### Folder permissions on LGTM Docker
+If you have any problems similar to this when running `docker compose -f docker-compose-infra.yaml up --wait`:
+`mkdir: can't create directory '/var/lib/grafana/plugins': Permission denied`
+
+Run the following on your terminal:
+```bash
+# these numbers are the uid/gid of each LGTM tool used on docker
+sudo chown -R 472:472 storage/grafana
+sudo chown -R 10001:10001 storage/tempo
+sudo chown -R 65534:65534 storage/prometheus
+```
