@@ -3,62 +3,108 @@ import { CONFIG } from "./config.ts";
 import { DocumentProcessor } from "./documentProcessor.ts";
 import { type PretrainedOptions } from "@huggingface/transformers";
 import { Neo4jVectorStore } from "@langchain/community/vectorstores/neo4j_vector";
-import { displayResults } from "./util.ts";
+import { ChatOpenAI } from "@langchain/openai";
+import { AI } from "./ai.ts";
+import { writeFile, mkdir } from "node:fs/promises";
 
-let _neo4jVectorStore: Neo4jVectorStore | null = null;
+let _neo4jVectorStore = null;
 
-async function clearAll(vectorStore: Neo4jVectorStore, nodeLabel: string) {
-  console.log(`Clearing all nodes with label ${nodeLabel} from Neo4j...`);
-  await vectorStore.query(
-    `MATCH (n: \`${nodeLabel}\`) DETACH DELETE n`
-  )
-  console.log(`All nodes with label ${nodeLabel} have been deleted.`);
+async function clearAll(
+  vectorStore: Neo4jVectorStore,
+  nodeLabel: string,
+): Promise<void> {
+  console.log("🗑️  Removendo todos os documentos existentes...");
+  await vectorStore.query(`MATCH (n:\`${nodeLabel}\`) DETACH DELETE n`);
+  console.log("✅ Documentos removidos com sucesso\n");
 }
 
 try {
-  console.log("Starting document embeddings with Neo4j...");
+  console.log("🚀 Inicializando sistema de Embeddings com Neo4j...\n");
+
   const documentProcessor = new DocumentProcessor(
     CONFIG.pdf.path,
-    CONFIG.textSplitter
-  )
+    CONFIG.textSplitter,
+  );
   const documents = await documentProcessor.loadAndSplit();
 
   const embeddings = new HuggingFaceTransformersEmbeddings({
     model: CONFIG.embedding.modelName,
     pretrainedOptions: CONFIG.embedding.pretrainedOptions as PretrainedOptions,
-  })
-  // const response = await embeddings.embedQuery("Javascript")
-  // console.log("Embedding response for 'Javascript':", response);
+  });
+
+  const nlpModel = new ChatOpenAI({
+    temperature: CONFIG.openRouter.temperature,
+    maxRetries: CONFIG.openRouter.maxRetries,
+    modelName: CONFIG.openRouter.nlpModel,
+    openAIApiKey: CONFIG.openRouter.apiKey,
+    configuration: {
+      baseURL: CONFIG.openRouter.url,
+      defaultHeaders: CONFIG.openRouter.defaultHeaders,
+    },
+  });
+
+  // ==================== STEP 1: POPULATE DATABASE ====================
+  console.log("📦 ETAPA 1: Populando base de dados...\n");
   _neo4jVectorStore = await Neo4jVectorStore.fromExistingGraph(
     embeddings,
     CONFIG.neo4j,
-  )
-  await clearAll(_neo4jVectorStore, CONFIG.neo4j.nodeLabel);
+  );
 
+  clearAll(_neo4jVectorStore, CONFIG.neo4j.nodeLabel);
   for (const [index, doc] of documents.entries()) {
-    console.log(`Adding document ${index + 1}/${documents.length} to Neo4j...`);
+    console.log(`✅ Adicionando documento ${index + 1}/${documents.length}`);
     await _neo4jVectorStore.addDocuments([doc]);
   }
-  console.log("All documents have been added to Neo4j.");
+  console.log("\n✅ Base de dados populada com sucesso!\n");
 
+  // ==================== STEP 2: RUN SIMILARITY SEARCH ====================
+  console.log("🔍 ETAPA 2: Executando buscas por similaridade...\n");
   const questions = [
-    // "O que é hot encoding e quando usar?",
-    "O que significa treinar uma rede neural?"
-  ]
+    "O que são tensores e como são representados em JavaScript?",
+    // "Como converter objetos JavaScript em tensores?",
+    // "O que é normalização de dados e por que é necessária?",
+    // "Como funciona uma rede neural no TensorFlow.js?",
+    // "O que significa treinar uma rede neural?",
+    // "o que é hot enconding e quando usar?",
+  ];
 
-  for (const question of questions) {
-    console.log(`💡  QUESTION: "${question}"\n`);
+  const ai = new AI({
+    nlpModel,
+    debugLog: console.log,
+    vectorStore: _neo4jVectorStore,
+    promptConfig: CONFIG.promptConfig,
+    templateText: CONFIG.templateText,
+    topK: CONFIG.similarity.topK,
+  });
 
-    const results = await _neo4jVectorStore.similaritySearch(question, CONFIG.similarity.topK);
-    console.log(`TOP ${CONFIG.similarity.topK} RESULTS:`);
+  for (const index in questions) {
+    const question = questions[index];
+    console.log(`\n${"=".repeat(80)}`);
+    console.log(`📌 PERGUNTA: ${question}`);
+    console.log("=".repeat(80));
+    const result = await ai.answerQuestion(question!);
 
-    displayResults(results);
+    if (result.error) {
+      console.log(`\n❌ Erro: ${result.error}\n`);
+      continue;
+    }
+
+    console.log(`\n${result.answer}\n`);
+    await mkdir(CONFIG.output.answersFolder, { recursive: true });
+
+    const fileName = `${CONFIG.output.answersFolder}/${CONFIG.output.fileName}-${index}-${Date.now()}.md`;
+
+    await writeFile(
+      fileName,
+      `📌 PERGUNTA:\n${question}\n\n💬 RESPOSTA:\n${result.answer!}`,
+    );
   }
 
-  console.log("Finished processing!");
-
+  // Cleanup
+  console.log(`\n${"=".repeat(80)}`);
+  console.log("✅ Processamento concluído com sucesso!\n");
 } catch (error) {
-  console.error("Error processing document:", error);
+  console.error("error", error);
 } finally {
-  await _neo4jVectorStore?.close()
+  await _neo4jVectorStore?.close();
 }
