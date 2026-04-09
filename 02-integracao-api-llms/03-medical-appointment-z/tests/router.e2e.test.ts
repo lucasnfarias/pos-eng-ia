@@ -31,11 +31,11 @@ describe("Medical Appointment System - E2E Tests", async () => {
 
   it("Schedule appointment - Error - Double booking", async () => {
     await makeARequest(
-      `Olá, sou Jorginho e quero agendar uma consulta com ${professionals.at(0)?.name} para quinta-feira às 18h`,
+      `Olá, sou Jorginho e quero agendar uma consulta com ${professionals.at(0)?.name} para amanhã às 18h`,
     );
 
     const response = await makeARequest(
-      `Olá, sou Jorginho e quero agendar uma consulta com ${professionals.at(0)?.name} para quinta-feira às 18h`,
+      `Olá, sou Jorginho e quero agendar uma consulta com ${professionals.at(0)?.name} para amanhã às 18h`,
     );
 
     console.log("Schedule Error Response:", response.body);
